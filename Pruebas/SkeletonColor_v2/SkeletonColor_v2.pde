@@ -5,37 +5,58 @@ Thomas Sanchez Lengeling.
  Skeleton color map example.
  Skeleton (x,y) positions are mapped to match the color Frame
  */
+ // Skeleton (x,y,z) es Skeleton3D, aunque está el ejercicio a medias
 
+//importamos libreria de huesos Kjoint
 import KinectPV2.KJoint;
+//importamos el resto de librerias mediante "*"
 import KinectPV2.*;
 
+//invocamos la clase KinectPV2
 KinectPV2 kinect;
 
 
 void setup() {
+  /*
+  P3D utiliza OpenGL, en vez de usar la CPU trabaja con el gráfica. 
+  P3D se utiliza para gráficos 3D, mientras P2D es para gráficos 2D.
+  */
   size(1920, 1080, P3D);
-
+  //crea un objeto. "this" se utiliza para hacer referencia al mismo objeto.
   kinect = new KinectPV2(this);
-
+  
+  //habilita ("true") las funciones de esqueleto color y el vídeo.  
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
 
+  //inicia el hardware con las funciones habilitadas anteriormente. 
   kinect.init();
 }
 
+//CADA FRAME DIBUJA DE NUEVO EL "VÍDEO", LAS ARTICULACIONES Y EL ESTADO DE LAS MANOS.
 void draw() {
   background(0);
-
+  
+  //objeto imagen con el video de kinect, el cual ocupa todo el ancho y alto.
   image(kinect.getColorImage(), 0, 0, width, height);
 
+  //Se crea una arraylist de KSkeleton llamada skeletonArray que pertenece a .getskeletoncolormap(); 
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
 
   //individual JOINTS
+  /*
+  Por cada bloque de array skeleton. Se le aplicará... 
+  SkeletonArray son las cantidad de personas que hay en escena.
+  */
   for (int i = 0; i < skeletonArray.size(); i++) {
+    // El objeto skeleton de la array KSkeleton será igual a la conseguida skeletonArray.get(i)
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
+    //si skeleton es traqueado por la kinect, entonces...
     if (skeleton.isTracked()) {
+      //La array joints consigue los joints de la objeto skeleton.
       KJoint[] joints = skeleton.getJoints();
 
+      //cada cuerpo de skeleton tiene un color asignado
       color col  = skeleton.getIndexColor();
       fill(col);
       stroke(col);
@@ -49,10 +70,13 @@ void draw() {
 
   fill(255, 0, 0);
   text(frameRate, 50, 50);
+  text(skeletonArray.size(), 50, 70);
 }
 
-//DRAW BODY
+//DRAW BODY es la función que dibuja artículaciones y huesos.
+//KJoint es una array con todas las articulaciones de un skeleton
 void drawBody(KJoint[] joints) {
+  
   drawBone(joints, KinectPV2.JointType_Head, KinectPV2.JointType_Neck);
   drawBone(joints, KinectPV2.JointType_Neck, KinectPV2.JointType_SpineShoulder);
   drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_SpineMid);
