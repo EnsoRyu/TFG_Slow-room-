@@ -1,97 +1,91 @@
 /*
 Thomas Sanchez Lengeling.
  http://codigogenerativo.com/
+ 
  KinectPV2, Kinect for Windows v2 library for processing
- Skeleton color map example.
- Skeleton (x,y) positions are mapped to match the color Frame
+ 
+ 3D Skeleton.
+ Some features a not implemented, such as orientation
  */
- // Skeleton (x,y,z) es Skeleton3D, aunque está el ejercicio a medias
 
-//importamos libreria de huesos Kjoint
 import KinectPV2.KJoint;
-//importamos el resto de librerias mediante "*"
 import KinectPV2.*;
 
-//invocamos la clase KinectPV2
 KinectPV2 kinect;
 
+
+float zVal = 300;
+float rotX = PI;
+//AÑADIDO*****************************************************
 float xjoint;
 float yjoint;
 float zjoint;
 int ncuerpo;
 
 void setup() {
-  /*
-  P3D utiliza OpenGL, en vez de usar la CPU trabaja con el gráfica. 
-  P3D se utiliza para gráficos 3D, mientras P2D es para gráficos 2D.
-  */
-  size(1920, 1080, P3D);
-  //crea un objeto. "this" se utiliza para hacer referencia al mismo objeto.
+  size(1024, 768, P3D);
+
   kinect = new KinectPV2(this);
-  
-  //habilita ("true") las funciones de esqueleto color y el vídeo.  
-  kinect.enableSkeletonColorMap(true);
+
   kinect.enableColorImg(true);
 
-  //inicia el hardware con las funciones habilitadas anteriormente. 
+  //enable 3d  with (x,y,z) position
+  kinect.enableSkeleton3DMap(true);
+
   kinect.init();
 }
 
-//CADA FRAME DIBUJA DE NUEVO EL "VÍDEO", LAS ARTICULACIONES Y EL ESTADO DE LAS MANOS.
 void draw() {
   background(0);
-  
-  //objeto imagen con el video de kinect, el cual ocupa todo el ancho y alto.
-  image(kinect.getColorImage(), 0, 0, width, height);
 
-  //Se crea una arraylist de KSkeleton llamada skeletonArray que pertenece a .getskeletoncolormap(); 
-  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+  image(kinect.getColorImage(), 0, 0, 320, 240);
+
+  //translate the scene to the center 
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  scale(zVal);
+  rotateX(rotX);
+
+  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeleton3d();
 
   //individual JOINTS
-  /*
-  Por cada bloque de array skeleton. Se le aplicará... 
-  SkeletonArray son las cantidad de personas que hay en escena.
-  */
   for (int i = 0; i < skeletonArray.size(); i++) {
-    // El objeto skeleton de la array KSkeleton será igual a la conseguida skeletonArray.get(i)
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-    //si skeleton es traqueado por la kinect, entonces...
     if (skeleton.isTracked()) {
-      //La array joints consigue los joints de la objeto skeleton.
       KJoint[] joints = skeleton.getJoints();
 
-      //cada cuerpo de skeleton tiene un color asignado
-      color col  = skeleton.getIndexColor();
-      fill(col);
-      stroke(col);
-      drawBody(joints);
-      //AÑADIDO LINEA 141
-      caca(joints);
       //draw different color for each hand state
       drawHandState(joints[KinectPV2.JointType_HandRight]);
       drawHandState(joints[KinectPV2.JointType_HandLeft]);
+
+      //Draw body
+      color col  = skeleton.getIndexColor();
+      stroke(col);
+      drawBody(joints);
+      //*****************************************************
+      caca(joints);
     }
   }
-  
+  popMatrix();
+
+
   fill(255, 0, 0);
   text(frameRate, 50, 50);
-  text(skeletonArray.size(), 50, 70);
 }
 
-//DRAW BODY es la función que dibuja artículaciones y huesos.
-//KJoint es una array con todas las articulaciones de un skeleton. Es decir, Kjoint[0] es una persona, Kjoint[1] es otra.
+
 void drawBody(KJoint[] joints) {
-  
   drawBone(joints, KinectPV2.JointType_Head, KinectPV2.JointType_Neck);
   drawBone(joints, KinectPV2.JointType_Neck, KinectPV2.JointType_SpineShoulder);
   drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_SpineMid);
+
   drawBone(joints, KinectPV2.JointType_SpineMid, KinectPV2.JointType_SpineBase);
   drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_ShoulderRight);
   drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_ShoulderLeft);
   drawBone(joints, KinectPV2.JointType_SpineBase, KinectPV2.JointType_HipRight);
   drawBone(joints, KinectPV2.JointType_SpineBase, KinectPV2.JointType_HipLeft);
 
-  // Right Arm
+  // Right Arm    
   drawBone(joints, KinectPV2.JointType_ShoulderRight, KinectPV2.JointType_ElbowRight);
   drawBone(joints, KinectPV2.JointType_ElbowRight, KinectPV2.JointType_WristRight);
   drawBone(joints, KinectPV2.JointType_WristRight, KinectPV2.JointType_HandRight);
@@ -126,18 +120,12 @@ void drawBody(KJoint[] joints) {
   drawJoint(joints, KinectPV2.JointType_Head);
 }
 
-//draw joint
-//Conseguir la posición x,y,z de la articulación y situar el punto de coordenadas allí
-//situar una elipse en esa posición
-// kinectpv2.jointtype_footleft es un número de jointType.
 void drawJoint(KJoint[] joints, int jointType) {
-  pushMatrix();
-  translate(joints[jointType].getX(), joints[jointType].getY(), joints[jointType].getZ());
-  ellipse(0, 0, 25, 25);
-  popMatrix();
+  strokeWeight(2.0f + joints[jointType].getZ()*8);
+  point(joints[jointType].getX(), joints[jointType].getY(), joints[jointType].getZ());
 }
 
-//prueba de localización
+//prueba de localización*******************************************************
 void caca(KJoint[] joints) {
   ncuerpo = KinectPV2.JointType_FootRight;
   xjoint = joints [ncuerpo].getX();
@@ -147,47 +135,30 @@ void caca(KJoint[] joints) {
   
 }
 
-//draw bone
-//Para crear el hueso busca el punto de la articulación, crea una elipse en el principio 
 void drawBone(KJoint[] joints, int jointType1, int jointType2) {
-  pushMatrix();
-  translate(joints[jointType1].getX(), joints[jointType1].getY(), joints[jointType1].getZ());
-  ellipse(0, 0, 25, 25);
-  popMatrix();
-  line(joints[jointType1].getX(), joints[jointType1].getY(), joints[jointType1].getZ(), joints[jointType2].getX(), joints[jointType2].getY(), joints[jointType2].getZ());
+  strokeWeight(2.0f + joints[jointType1].getZ()*8);
+  point(joints[jointType2].getX(), joints[jointType2].getY(), joints[jointType2].getZ());
 }
 
-//draw hand state
-//Cómo encuentra la articulacion de las manos?
 void drawHandState(KJoint joint) {
-  noStroke();
   handState(joint.getState());
-  pushMatrix();
-  translate(joint.getX(), joint.getY(), joint.getZ());
-  ellipse(0, 0, 70, 70);
-  popMatrix();
+  strokeWeight(5.0f + joint.getZ()*8);
+  point(joint.getX(), joint.getY(), joint.getZ());
 }
 
-/*
-Different hand state
- KinectPV2.HandState_Open: verde
- KinectPV2.HandState_Closed: rojo
- KinectPV2.HandState_Lasso: azul 
- KinectPV2.HandState_NotTracked: blanco
- */
 void handState(int handState) {
   switch(handState) {
   case KinectPV2.HandState_Open:
-    fill(0, 255, 0);
+    stroke(0, 255, 0);
     break;
   case KinectPV2.HandState_Closed:
-    fill(255, 0, 0);
+    stroke(255, 0, 0);
     break;
   case KinectPV2.HandState_Lasso:
-    fill(0, 0, 255);
+    stroke(0, 0, 255);
     break;
   case KinectPV2.HandState_NotTracked:
-    fill(255, 255, 255);
+    stroke(100, 100, 100);
     break;
   }
 }
