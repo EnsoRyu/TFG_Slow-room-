@@ -27,11 +27,14 @@ int ncuerpo;
 
 int dtxt = 60;
 
-int x5 = 500;
-int y5 = 500;
-int r= 100;
-float d;
+float x5 = 0.257;
+float y5 = -0.156;
+float z5 = 1.27;
+float r= 0.2;
+float Dxy;
+float Dyz;
 boolean dentro = false;
+boolean activar = false;
 
 color col2 = color(255,0,0);
 color fixcolor;
@@ -80,14 +83,26 @@ void draw() {
       //draw different color for each hand state
       drawHandState(joints[KinectPV2.JointType_HandRight]);
       drawHandState(joints[KinectPV2.JointType_HandLeft]);
+      //aparece welcome en pantalla cuando collision()
+      //welcome();
     }
   }
-
+  //TEXTO informativo
   fill(255, 0, 0);
   text(frameRate, 50, dtxt);
   text("número de personas: " + skeletonArray.size(), 50, dtxt*2);
   text (xjoint+" X  "+ yjoint+" Y  " + zjoint +" Z  ", 50, dtxt*3);
   text (xMapped+" X  "+ yMapped+" Y  " + zMapped +" Z  ", 50, dtxt*4);
+  text ("distancia XY: "+Dxy, 50, dtxt*5);
+  text ("distancia YZ: "+Dyz, 50, dtxt*6);
+  //int dentroint = int(dentro);
+  //text (dentroint, 50, dtxt*6);
+  
+  //colision bola
+  //pushStyle();
+  collision();
+  //ellipse(x5,y5,r,r);
+  //popStyle();
 }
 
 
@@ -202,20 +217,35 @@ fill (col2);
 }
 
 void collision() {
-  d = dist(xjoint, yjoint, x5, y5);
-  fixcolor = col2;
-  fill(fixcolor);
-if (d < r) {
-  if(!dentro){
-  dentro = true;
-  changeColor();
+  Dxy = dist(xjoint, yjoint, x5, y5);
+  Dyz = dist(yjoint, zjoint, y5, z5);
+if (Dxy < r) {
+  if (Dyz < r) {
+    pushStyle();
+    textSize(100);
+    text("DON'T TOUCHA MY BACK", width/4, height/2);
+    popStyle();
+    //dentro = true;
+    //activar = true;
+    //changeColor();
   }
 }
+}
+/*
 else {
   dentro = false;
   }
 }
 
+void welcome() {
+if (activar){
+pushStyle();
+textSize(100);
+text("WELCOME", width/2, height/2);
+popStyle();
+}
+}
+*/
 
 void drawBone(KJoint[] joints, int jointType1, int jointType2) {
   /*
